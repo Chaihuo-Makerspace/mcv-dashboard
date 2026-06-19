@@ -3,7 +3,9 @@
 实时展示路径追踪、环境传感器数据、天气与空气质量信息的全屏看板应用。  
 由车载设备通过 HTTP 接口上报位置，服务端自动拉取天气/空气质量数据并推送给前端。
 
-![Node.js](https://img.shields.io/badge/Node.js-20-green) ![Express](https://img.shields.io/badge/Express-4-lightgrey) ![License](https://img.shields.io/badge/license-MIT-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-00f0ff) ![Node.js](https://img.shields.io/badge/Node.js-20-green) ![Express](https://img.shields.io/badge/Express-4-lightgrey) ![License](https://img.shields.io/badge/license-MIT-blue)
+
+> **当前版本：v1.1.0** — 未来科技美学界面（深色霓虹 / HUD 风格 / 全息相框）
 
 ---
 
