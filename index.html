@@ -4,53 +4,147 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>柴火数字基地车移动数据中心 (Chaihuo Mobile Data Center)</title>
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;600;700&display=swap" rel="stylesheet">
+
   <!-- ECharts -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
 
-  <!-- Custom Scripts for Map Animation -->
-  <!-- Note: Move these to end of body to ensure DOM is ready -->
-
   <style>
-    body {
-      font-family: 'Noto Sans SC', sans-serif;
-      background-color: #050914;
-      color: #e2e8f0;
-      margin: 0;
-      overflow: hidden;
-      /* Subtle grid background */
-      background-image: 
-        linear-gradient(to right, rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-    
-    .font-mono {
-      font-family: 'Orbitron', sans-serif;
+    :root {
+      --bg-deep: #02040a;
+      --bg-panel: rgba(8, 16, 32, 0.62);
+      --cyan: #00f0ff;
+      --cyan-dim: rgba(0, 240, 255, 0.15);
+      --cyan-glow: rgba(0, 240, 255, 0.55);
+      --purple: #b829ff;
+      --purple-dim: rgba(184, 41, 255, 0.12);
+      --purple-glow: rgba(184, 41, 255, 0.5);
+      --teal: #00ffcc;
+      --teal-dim: rgba(0, 255, 204, 0.12);
+      --teal-glow: rgba(0, 255, 204, 0.5);
+      --glass: rgba(255, 255, 255, 0.03);
+      --border: rgba(0, 240, 255, 0.18);
+      --text-main: #e8f4ff;
+      --text-dim: #8aa3c7;
     }
 
-    /* Main Grid Layout */
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans SC', 'Rajdhani', sans-serif;
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ── Ambient background layers ── */
+    .bg-layers {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(0, 240, 255, 0.08) 0%, transparent 35%),
+        radial-gradient(circle at 80% 20%, rgba(184, 41, 255, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 60% 80%, rgba(0, 255, 204, 0.06) 0%, transparent 45%),
+        var(--bg-deep);
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: radial-gradient(circle at center, black 30%, transparent 85%);
+      animation: gridPulse 8s ease-in-out infinite;
+    }
+
+    .bg-scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 2px,
+        rgba(0, 240, 255, 0.015) 2px,
+        rgba(0, 240, 255, 0.015) 4px
+      );
+      opacity: 0.6;
+    }
+
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particles::before, .particles::after {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow:
+        10vw 20vh 0 var(--cyan),
+        30vw 60vh 0 var(--purple),
+        50vw 10vh 0 var(--teal),
+        70vw 80vh 0 var(--cyan),
+        90vw 40vh 0 var(--purple),
+        15vw 90vh 0 var(--teal),
+        45vw 35vh 0 var(--cyan),
+        65vw 15vh 0 var(--purple),
+        85vw 70vh 0 var(--teal);
+      opacity: 0.35;
+      animation: floatParticles 20s linear infinite;
+    }
+    .particles::after {
+      animation-delay: -10s;
+      animation-duration: 25s;
+      opacity: 0.2;
+    }
+
+    @keyframes gridPulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+    @keyframes floatParticles {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-100vh); }
+    }
+
+    /* ── Dashboard grid ── */
     #dashboard {
       display: grid;
       grid-template-columns: 3fr 5.5fr 3fr;
       grid-template-rows: repeat(12, 1fr);
-      gap: 1.5rem;
-      height: calc(100vh - 40px); /* Leave 40px for footer */
-      padding: 1.5rem 1.5rem 0.5rem 1.5rem;
-      box-sizing: border-box;
+      gap: 1.25rem;
+      height: calc(100vh - 44px);
+      padding: 1.25rem 1.25rem 0.5rem 1.25rem;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Panel Positions */
     .panel-tl { grid-column: 1; grid-row: 1 / span 6; }
     .panel-bl { grid-column: 1; grid-row: 7 / span 6; }
     .panel-ct { grid-column: 2; grid-row: 1 / span 8; }
@@ -58,210 +152,393 @@
     .panel-merged { grid-column: 3; grid-row: 1 / span 7; }
     .panel-br { grid-column: 3; grid-row: 8 / span 5; }
 
-    /* Panel Styling */
+    /* ── Futuristic panel ── */
     .panel {
-      background: rgba(11, 20, 38, 0.7);
-      border: 1px solid rgba(34, 211, 238, 0.2);
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.05), inset 0 0 20px rgba(0, 150, 255, 0.05);
-      backdrop-filter: blur(10px);
       position: relative;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow:
+        0 0 0 1px rgba(0, 240, 255, 0.04) inset,
+        0 0 30px rgba(0, 240, 255, 0.06),
+        0 8px 32px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(14px);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
-    
-    /* Decorative glowing corners */
     .panel::before {
       content: '';
       position: absolute;
-      top: -1px; left: -1px;
-      width: 15px; height: 15px;
-      border-top: 2px solid #22d3ee;
-      border-left: 2px solid #22d3ee;
-      border-top-left-radius: 8px;
-      box-shadow: -2px -2px 5px rgba(34, 211, 238, 0.5);
+      inset: 0;
+      border-radius: 12px;
+      padding: 1px;
+      background: conic-gradient(from 0deg, transparent 0%, var(--cyan) 15%, transparent 30%, transparent 70%, var(--purple) 85%, transparent 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.4s ease;
       pointer-events: none;
-      z-index: 10;
+      animation: borderRotate 6s linear infinite;
     }
-    .panel::after {
-      content: '';
-      position: absolute;
-      bottom: -1px; right: -1px;
-      width: 15px; height: 15px;
-      border-bottom: 2px solid #22d3ee;
-      border-right: 2px solid #22d3ee;
-      border-bottom-right-radius: 8px;
-      box-shadow: 2px 2px 5px rgba(34, 211, 238, 0.5);
-      pointer-events: none;
-      z-index: 10;
+    .panel:hover::before { opacity: 0.7; }
+    .panel:hover {
+      border-color: rgba(0, 240, 255, 0.35);
+      box-shadow:
+        0 0 0 1px rgba(0, 240, 255, 0.08) inset,
+        0 0 40px rgba(0, 240, 255, 0.12),
+        0 12px 40px rgba(0, 0, 0, 0.5);
     }
 
+    @keyframes borderRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Corner brackets */
+    .corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-color: var(--cyan);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 10;
+      filter: drop-shadow(0 0 4px var(--cyan-glow));
+      transition: all 0.3s ease;
+    }
+    .panel:hover .corner { width: 24px; height: 24px; }
+    .corner-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 12px; }
+    .corner-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; border-top-right-radius: 12px; }
+    .corner-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; border-bottom-left-radius: 12px; }
+    .corner-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 12px; }
+
+    /* Panel header */
     .panel-title {
-      color: #22d3ee;
-      font-weight: 700;
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      border-bottom: 1px solid rgba(34, 211, 238, 0.2);
-      padding-bottom: 0.5rem;
-      margin-bottom: 1rem;
+      gap: 0.6rem;
+      color: var(--cyan);
+      font-family: 'Orbitron', 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding-bottom: 0.6rem;
+      margin-bottom: 0.9rem;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.18);
+      position: relative;
+      text-shadow: 0 0 10px var(--cyan-dim);
+    }
+    .panel-title::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 40%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--cyan), transparent);
+      box-shadow: 0 0 8px var(--cyan-glow);
+    }
+    .panel-title i {
+      color: var(--teal);
+      filter: drop-shadow(0 0 4px var(--teal-glow));
     }
 
-    .glassy-frame {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
+    /* HUD decorative numeric label */
+    .hud-label {
+      position: absolute;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .hud-label.tr { top: 10px; right: 12px; }
+    .hud-label.bl { bottom: 10px; left: 12px; }
+
+    /* ── Glass cards ── */
+    .glass-card {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), rgba(184, 41, 255, 0.03));
+      border: 1px solid rgba(0, 240, 255, 0.12);
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+    .glass-card:hover::before { transform: translateX(100%); }
+    .glass-card:hover {
+      border-color: rgba(0, 240, 255, 0.35);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
     }
 
-    /* Custom Scrollbar for inner overflow if any */
-    ::-webkit-scrollbar {
-      width: 4px;
+    /* ── Metric typography ── */
+    .metric-value {
+      font-family: 'Orbitron', 'Rajdhani', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
+    .metric-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(34, 211, 238, 0.3);
+    .metric-unit {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.75em;
+      color: var(--cyan);
+      opacity: 0.9;
+    }
+
+    /* ── Status badges ── */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.15rem 0.5rem;
       border-radius: 4px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid currentColor;
+      background: rgba(0,0,0,0.25);
+    }
+    .status-badge.pulse i {
+      animation: pulseDot 1.6s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.35; transform: scale(0.85); }
+      50% { opacity: 1; transform: scale(1.1); }
     }
 
-    @keyframes clusterScan {
-      0% { background-position: 0% 0%, 50% 50%, 50% 50%; }
-      100% { background-position: 220% 180%, 50% 50%, 50% 50%; }
+    /* ── Progress bars ── */
+    .progress-track {
+      background: rgba(0,0,0,0.35);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+      height: 6px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      position: relative;
+      box-shadow: 0 0 12px currentColor;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
 
-    @keyframes clusterGlow {
-      0%, 100% { opacity: 0.25; }
-      50% { opacity: 0.55; }
+    /* ── Holographic image frame ── */
+    .holo-frame {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+      transition: all 0.4s ease;
+    }
+    .holo-frame::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(0, 240, 255, 0.12),
+        rgba(184, 41, 255, 0.08),
+        rgba(0, 255, 204, 0.12)
+      );
+      opacity: 0.5;
+      mix-blend-mode: overlay;
+      z-index: 2;
+      pointer-events: none;
+      animation: holoShift 4s ease-in-out infinite;
+    }
+    .holo-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--teal), var(--cyan)) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 3;
+      animation: borderFlow 3s linear infinite;
+      background-size: 300% 100%;
+    }
+    .holo-frame:hover::after { opacity: 1; }
+    .holo-frame:hover {
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.18);
+      transform: translateY(-2px);
+    }
+    .holo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.75;
+      transition: all 0.5s ease;
+    }
+    .holo-frame:hover img { opacity: 1; transform: scale(1.08); }
+    .holo-scan {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent, rgba(0, 240, 255, 0.15), transparent);
+      transform: translateY(-100%);
+      animation: holoScan 3.5s ease-in-out infinite;
+      z-index: 4;
+      pointer-events: none;
+    }
+    @keyframes holoScan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+    @keyframes holoShift {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.7; }
+    }
+    @keyframes borderFlow {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
     }
 
+    /* ── Temperature card ── */
+    .temp-card {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(0, 240, 255, 0.12);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    .temp-card.alert {
+      border-color: rgba(248, 113, 113, 0.6) !important;
+      animation: alertPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(248, 113, 113, 0); }
+      50% { box-shadow: 0 0 20px rgba(248, 113, 113, 0.35), inset 0 0 16px rgba(248, 113, 113, 0.12); }
+    }
+
+    /* ── Map panel enhancements ── */
     .cluster-panel-anim {
       position: absolute;
       inset: 0;
       pointer-events: none;
       z-index: 0;
-      opacity: 0.35;
+      opacity: 0.4;
       background-image:
         url('./cluster-anim.svg'),
-        radial-gradient(closest-side at 70% 30%, rgba(34, 211, 238, 0.18), transparent 60%),
-        radial-gradient(closest-side at 20% 70%, rgba(96, 165, 250, 0.14), transparent 62%);
-      background-size: 300px 300px, 120% 120%, 120% 120%;
+        radial-gradient(closest-side at 70% 30%, rgba(0, 240, 255, 0.14), transparent 60%),
+        radial-gradient(closest-side at 20% 70%, rgba(184, 41, 255, 0.1), transparent 62%);
+      background-size: 320px 320px, 130% 130%, 130% 130%;
       background-repeat: repeat, no-repeat, no-repeat;
       mix-blend-mode: screen;
-      filter: blur(0.2px);
-      animation: clusterScan 7s linear infinite;
+      filter: blur(0.3px);
+      animation: clusterScan 10s linear infinite;
     }
-
     .cluster-panel-anim::after {
       content: '';
       position: absolute;
       inset: -30%;
-      background: conic-gradient(from 0deg, transparent, rgba(34, 211, 238, 0.10), transparent, rgba(96, 165, 250, 0.08), transparent);
-      animation: clusterGlow 2.8s ease-in-out infinite;
+      background: conic-gradient(from 0deg, transparent, rgba(0, 240, 255, 0.08), transparent, rgba(184, 41, 255, 0.06), transparent);
+      animation: clusterGlow 3.5s ease-in-out infinite;
+    }
+    @keyframes clusterScan {
+      0% { background-position: 0% 0%, 50% 50%, 50% 50%; }
+      100% { background-position: 240% 200%, 50% 50%, 50% 50%; }
+    }
+    @keyframes clusterGlow {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.55; }
     }
 
-    @keyframes tempAlertPulse {
-      0%, 100% { box-shadow: 0 0 0 rgba(248, 113, 113, 0); }
-      50% { box-shadow: 0 0 18px rgba(248, 113, 113, 0.35), inset 0 0 14px rgba(248, 113, 113, 0.18); }
-    }
-
-    @keyframes tempTextBlink {
-      0%, 100% { opacity: 0.75; }
-      50% { opacity: 1; }
-    }
-
-    .temp-card.alert {
-      border-color: rgba(248, 113, 113, 0.55) !important;
-      animation: tempAlertPulse 1s ease-in-out infinite;
-    }
-
-    .temp-card.alert .temp-value {
-      color: #f87171;
-    }
-
-    .temp-card.alert .temp-status {
-      color: #fecaca;
-      animation: tempTextBlink 0.9s ease-in-out infinite;
-    }
-
-    /* --- 右侧面板缩放专用样式 --- */
+    /* ── Right panel scaling ── */
     .right-panel {
-      padding: 16px 16px 10px !important; /* 底部固定 10px */
-      overflow: hidden !important;        /* 防止缩放后溢出 */
+      padding: 14px 14px 10px !important;
+      overflow: hidden !important;
     }
-    
     .right-panel > .inner {
       transform: scale(var(--panel-scale, 1));
-      transform-origin: right bottom; /* 以右下角为基准缩放，保持底边距稳定 */
+      transform-origin: right bottom;
       width: 100%;
       height: 100%;
       display: flex;
       flex-direction: column;
     }
-    
-    /* 统一收口最后一行/最后一个元素的外边距，确保真实间距=10px */
-    .right-panel > .inner > *:last-child {
-      margin-bottom: 0 !important;
-    }
-    
-    /* 响应式缩放 */
+    .right-panel > .inner > *:last-child { margin-bottom: 0 !important; }
     @media (max-width: 1680px) { .right-panel { --panel-scale: 0.95; } }
     @media (max-width: 1440px) { .right-panel { --panel-scale: 0.9; } }
     @media (max-width: 1280px) { .right-panel { --panel-scale: 0.85; } }
 
-    /* =============================================
-       响应式断点：笔记本屏幕自适应 (1280 ~ 1680px)
-       ============================================= */
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.25); }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.25); border-radius: 4px; }
 
-    /* 1680px：轻量调整 — gap/padding 缩减，状态卡略收窄 */
+    /* ── Footer ── */
+    .footer-bar {
+      height: 44px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1.5rem;
+      background: rgba(2, 4, 10, 0.75);
+      border-top: 1px solid rgba(0, 240, 255, 0.15);
+      backdrop-filter: blur(12px);
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      z-index: 50;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+    .footer-bar i { color: var(--cyan); filter: drop-shadow(0 0 4px var(--cyan-glow)); }
+
+    /* ── Responsive ── */
     @media (max-width: 1680px) {
-      #dashboard {
-        gap: 1.2rem;
-        padding: 1.2rem 1.2rem 0.4rem 1.2rem;
-      }
+      #dashboard { gap: 1rem; padding: 1rem 1rem 0.4rem 1rem; }
       .min-w-\[240px\] { min-width: 220px !important; }
     }
-
-    /* 1440px：中等压缩 — 面板内边距、panel-title、大字体同步缩减 */
     @media (max-width: 1440px) {
-      #dashboard {
-        gap: 0.9rem;
-        padding: 0.9rem 0.9rem 0.35rem 0.9rem;
-      }
-      /* 覆盖 Tailwind p-4（panel-merged 使用 p-3 且已有 scale(0.9)，故意排除） */
-      #dashboard > .panel.p-4 {
-        padding: 0.75rem !important;
-      }
-      .panel-title {
-        font-size: 0.8rem !important;
-        margin-bottom: 0.6rem !important;
-        padding-bottom: 0.4rem !important;
-      }
-      /* 左上面板大数字（温度 text-4xl、气压/风速 text-3xl） */
+      #dashboard { gap: 0.8rem; padding: 0.8rem 0.8rem 0.35rem 0.8rem; }
+      #dashboard > .panel.p-4 { padding: 0.75rem !important; }
+      .panel-title { font-size: 0.75rem !important; margin-bottom: 0.55rem !important; padding-bottom: 0.4rem !important; }
       #dashboard .panel-tl .text-4xl { font-size: 1.9rem !important; }
       #dashboard .panel-tl .text-3xl { font-size: 1.5rem !important; }
       .min-w-\[240px\] { min-width: 190px !important; }
     }
-
-    /* 1280px：紧凑模式 — 中央列略宽，全面最小化间距和字体 */
     @media (max-width: 1280px) {
-      #dashboard {
-        grid-template-columns: 2.8fr 6fr 2.8fr;
-        gap: 0.65rem;
-        padding: 0.65rem 0.65rem 0.3rem 0.65rem;
-      }
-      /* 覆盖 Tailwind p-4（panel-merged 使用 p-3 且已有 scale(0.85)，故意排除） */
-      #dashboard > .panel.p-4 {
-        padding: 0.6rem !important;
-      }
-      .panel-title {
-        font-size: 0.75rem !important;
-        margin-bottom: 0.4rem !important;
-        padding-bottom: 0.3rem !important;
-      }
+      #dashboard { grid-template-columns: 2.8fr 6fr 2.8fr; gap: 0.6rem; padding: 0.6rem 0.6rem 0.3rem 0.6rem; }
+      #dashboard > .panel.p-4 { padding: 0.6rem !important; }
+      .panel-title { font-size: 0.7rem !important; margin-bottom: 0.4rem !important; padding-bottom: 0.3rem !important; }
       #dashboard .panel-tl .text-4xl { font-size: 1.6rem !important; }
       #dashboard .panel-tl .text-3xl { font-size: 1.2rem !important; }
       .min-w-\[240px\] { min-width: 165px !important; }
@@ -270,172 +547,195 @@
 </head>
 <body>
 
+  <!-- Ambient background -->
+  <div class="bg-layers"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-scanlines"></div>
+  <div class="particles"></div>
+
   <div id="dashboard">
-    
-    <!-- 1. 左上 (环境传感器数据) -->
+
+    <!-- 1. 左上：环境传感器数据 -->
     <div class="panel panel-tl p-4">
+      <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+      <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+      <span class="hud-label tr">SYS.ENV.01</span>
+      <span class="hud-label bl">SENSOR ARRAY</span>
+
       <div class="panel-title">
-        <i class="fas fa-leaf text-cyan-400"></i> 环境传感器数据 (ENVIRONMENTAL SENSOR DATA)
+        <i class="fas fa-leaf"></i> 环境传感器数据 <span class="text-[10px] opacity-60 ml-1">ENVIRONMENTAL SENSOR DATA</span>
       </div>
-      <div class="flex justify-between items-center mb-4 bg-black/30 p-2 rounded border border-white/5">
-        <div class="flex items-center gap-2 text-lg text-white font-bold">
+
+      <div class="flex justify-between items-center mb-4 glass-card p-3 rounded-lg">
+        <div class="flex items-center gap-3 text-lg text-white font-bold">
           <img id="weatherIcon" src="" alt="weather" class="w-8 h-8" style="display:none;">
-          <i id="weatherIconFallback" class="fas fa-cloud-sun text-yellow-400 text-2xl"></i>
-          <span id="sensorCityName">深圳南山区</span>
+          <i id="weatherIconFallback" class="fas fa-cloud-sun text-yellow-400 text-2xl" style="filter:drop-shadow(0 0 6px rgba(250,204,21,0.5));"></i>
+          <span id="sensorCityName" class="metric-value">深圳南山区</span>
         </div>
-        <div class="flex items-center gap-2 text-white">
-          <span id="sensorAqi" class="text-green-400 text-xs border border-green-400 px-1 py-0.5 rounded shadow-[0_0_5px_#4ade80]">优</span>
-          <span id="sensorPm25" class="font-mono text-lg">12</span> <span class="text-xs text-gray-400">µg/m³ PM2.5</span>
+        <div class="flex items-center gap-3 text-white">
+          <span id="sensorAqi" class="text-green-400 text-xs border border-green-400 px-2 py-0.5 rounded shadow-[0_0_8px_#4ade80] font-mono">优</span>
+          <span id="sensorPm25" class="metric-value text-lg">12</span> <span class="text-xs text-gray-400">µg/m³ PM2.5</span>
         </div>
       </div>
-      
+
       <div class="grid grid-cols-2 gap-4 flex-1 min-h-0">
         <!-- 温度 -->
-        <div class="bg-blue-900/20 p-3 rounded border border-blue-500/20 flex flex-col relative group hover:border-cyan-500/50 transition">
-          <div class="text-xs text-cyan-300/80 mb-1">温度 (Temperature)</div>
-          <div class="text-4xl font-bold text-white font-mono tracking-wider"><span id="sensorTemp">21.5</span><span class="text-lg text-cyan-500">°C</span></div>
+        <div class="glass-card p-3 flex flex-col relative group">
+          <div class="metric-label mb-1">温度 <span class="opacity-60">Temperature</span></div>
+          <div class="text-4xl font-bold text-white metric-value tracking-wider"><span id="sensorTemp">21.5</span><span class="metric-unit">°C</span></div>
           <div id="tempChart" class="flex-1 w-full mt-2 min-h-0"></div>
         </div>
         <!-- 湿度 -->
-        <div class="bg-blue-900/20 p-3 rounded border border-blue-500/20 flex flex-col relative group hover:border-cyan-500/50 transition">
-          <div class="text-xs text-cyan-300/80 mb-1">湿度 (Humidity)</div>
-          <div class="text-4xl font-bold text-white font-mono tracking-wider absolute top-3 right-3 z-10"><span id="sensorHumidity">45</span><span class="text-lg text-cyan-500">%</span></div>
+        <div class="glass-card p-3 flex flex-col relative group">
+          <div class="metric-label mb-1">湿度 <span class="opacity-60">Humidity</span></div>
+          <div class="text-4xl font-bold text-white metric-value tracking-wider absolute top-3 right-3 z-10"><span id="sensorHumidity">45</span><span class="metric-unit">%</span></div>
           <div id="humChart" class="flex-1 w-full min-h-0 -mt-4"></div>
         </div>
-        <!-- 气压与海拔 -->
-        <div class="col-span-2 bg-blue-900/20 p-4 rounded border border-blue-500/20 flex justify-between items-center relative overflow-hidden group hover:border-cyan-500/50 transition">
+        <!-- 气压与风速 -->
+        <div class="col-span-2 glass-card p-4 flex justify-between items-center relative overflow-hidden">
           <div class="absolute right-0 top-0 opacity-10"><i class="fas fa-mountain text-8xl"></i></div>
           <div class="z-10">
-            <div class="text-xs text-cyan-300/80 mb-1">气压 (Pressure)</div>
-            <div class="text-3xl font-bold text-white font-mono"><span id="sensorPressure">720</span> <span class="text-sm text-cyan-500">hPa</span></div>
+            <div class="metric-label mb-1">气压 <span class="opacity-60">Pressure</span></div>
+            <div class="text-3xl font-bold text-white metric-value"><span id="sensorPressure">720</span> <span class="metric-unit">hPa</span></div>
           </div>
-          <div class="h-10 w-px bg-cyan-500/30 z-10"></div>
+          <div class="h-10 w-px bg-cyan-500/30 z-10 shadow-[0_0_6px_rgba(0,240,255,0.4)]"></div>
           <div class="text-right z-10">
-            <div class="text-xs text-cyan-300/80 mb-1">风速 (Wind Speed)</div>
-            <div class="text-3xl font-bold text-white font-mono flex items-center justify-end gap-2">
-              <i class="fas fa-wind text-cyan-400 text-sm"></i> <span id="sensorWind">--</span><span class="text-sm text-cyan-500">m/s</span>
+            <div class="metric-label mb-1">风速 <span class="opacity-60">Wind Speed</span></div>
+            <div class="text-3xl font-bold text-white metric-value flex items-center justify-end gap-2">
+              <i class="fas fa-wind text-cyan-400 text-sm" style="filter:drop-shadow(0 0 4px rgba(0,240,255,0.5));"></i> <span id="sensorWind">--</span><span class="metric-unit">m/s</span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 2. 左下 (AI 共创项目进度) -->
+    <!-- 2. 左下：AI 共创项目进度 -->
     <div class="panel panel-bl p-4">
+      <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+      <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+      <span class="hud-label tr">SYS.AI.02</span>
+      <span class="hud-label bl">CO-CREATION</span>
+
       <div class="panel-title">
-        <i class="fas fa-network-wired text-cyan-400"></i> AI 共创项目进度 (AI CO-CREATION PROGRESS)
+        <i class="fas fa-network-wired"></i> AI 共创项目进度 <span class="text-[10px] opacity-60 ml-1">AI CO-CREATION PROGRESS</span>
       </div>
-      
+
       <div class="flex flex-col gap-4 flex-1 min-h-0">
         <!-- 项目 1 -->
-        <div class="bg-blue-900/20 p-3 rounded border border-blue-500/20 group hover:bg-blue-900/30 transition">
-          <div class="flex justify-between items-end mb-1">
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-end mb-2">
             <div class="text-sm text-white font-bold tracking-wide">高原居民人脸分析</div>
-            <div class="text-xs text-cyan-400 border border-cyan-400 px-1.5 py-0.5 rounded shadow-[0_0_5px_rgba(34,211,238,0.3)]">进行中</div>
+            <span class="status-badge text-cyan-400 pulse"><i class="fas fa-circle text-[6px]"></i> 进行中</span>
           </div>
-          <div class="text-[10px] text-gray-400 mb-3">Plateau Residents Face Analysis</div>
-          <div class="w-full bg-gray-800/80 h-2 rounded-full overflow-hidden mb-2 border border-gray-700">
-            <div class="bg-cyan-400 h-full shadow-[0_0_10px_#22d3ee] relative">
-              <div class="absolute inset-0 bg-white/20 w-full animate-pulse"></div>
-            </div>
+          <div class="text-[10px] text-gray-400 mb-3 font-mono tracking-wide">PLATEAU RESIDENTS FACE ANALYSIS</div>
+          <div class="progress-track mb-2">
+            <div class="progress-fill bg-cyan-400 text-cyan-400" style="width: 60%"></div>
           </div>
           <div class="flex justify-between text-xs text-gray-300">
-            <span class="font-mono text-cyan-200">60%</span>
-            <span>样本采集数: <span class="text-cyan-300 font-mono font-bold">1250</span></span>
+            <span class="metric-value text-cyan-200">60%</span>
+            <span>样本采集数: <span class="text-cyan-300 metric-value font-bold">1250</span></span>
           </div>
         </div>
 
         <!-- 项目 2 -->
-        <div class="bg-blue-900/20 p-3 rounded border border-blue-500/20 group hover:bg-blue-900/30 transition">
-          <div class="flex justify-between items-end mb-1">
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-end mb-2">
             <div class="text-sm text-white font-bold tracking-wide">智能仓储管理</div>
-            <div class="text-xs text-green-400 border border-green-400 px-1.5 py-0.5 rounded shadow-[0_0_5px_rgba(74,222,128,0.3)]">已完成</div>
+            <span class="status-badge text-green-400"><i class="fas fa-check-circle text-[6px]"></i> 已完成</span>
           </div>
-          <div class="text-[10px] text-gray-400 mb-3">Smart Warehouse Management</div>
-          <div class="w-full bg-gray-800/80 h-2 rounded-full overflow-hidden mb-2 border border-gray-700">
-            <div class="bg-green-400 h-full shadow-[0_0_10px_#4ade80]" style="width: 100%"></div>
+          <div class="text-[10px] text-gray-400 mb-3 font-mono tracking-wide">SMART WAREHOUSE MANAGEMENT</div>
+          <div class="progress-track mb-2">
+            <div class="progress-fill bg-green-400 text-green-400" style="width: 100%"></div>
           </div>
           <div class="flex justify-between text-xs text-gray-300">
-            <span class="font-mono text-green-200">100%</span>
-            <span>管理项数: <span class="text-green-300 font-mono font-bold">450</span></span>
+            <span class="metric-value text-green-200">100%</span>
+            <span>管理项数: <span class="text-green-300 metric-value font-bold">450</span></span>
           </div>
         </div>
       </div>
 
       <!-- 最新故事摘要 -->
       <div class="mt-4">
-        <div class="text-xs text-cyan-400/80 mb-2 border-b border-cyan-500/20 pb-1 flex items-center gap-1"><i class="fas fa-book-open"></i> 最新故事摘要</div>
-        <div class="flex gap-3 items-center bg-black/40 p-2.5 rounded border border-white/5 hover:border-cyan-500/30 transition cursor-pointer group">
-          <div class="w-16 h-16 rounded overflow-hidden flex-shrink-0 border border-gray-600 relative">
-            <div class="absolute inset-0 bg-cyan-500/20 group-hover:bg-transparent transition z-10"></div>
-            <img src="https://picsum.photos/seed/chaihuo-story/150/150" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="story">
+        <div class="text-xs text-cyan-400/80 mb-2 border-b border-cyan-500/20 pb-1 flex items-center gap-1 font-mono tracking-wider"><i class="fas fa-book-open"></i> 最新故事摘要 <span class="opacity-50">LATEST STORY</span></div>
+        <div class="flex gap-3 items-center glass-card p-2.5 cursor-pointer group">
+          <div class="holo-frame w-16 h-16 flex-shrink-0">
+            <div class="holo-scan"></div>
+            <img src="https://picsum.photos/seed/chaihuo-story/150/150" class="w-full h-full object-cover" alt="story">
           </div>
           <div class="flex-1">
-            <div class="text-sm text-white font-bold flex items-center gap-1 mb-1"><i class="fas fa-map-marker-alt text-red-500"></i> 敦煌 (Dunhuang)</div>
+            <div class="text-sm text-white font-bold flex items-center gap-1 mb-1"><i class="fas fa-map-marker-alt text-purple-400" style="filter:drop-shadow(0 0 4px rgba(184,41,255,0.5));"></i> 敦煌 <span class="text-[10px] text-gray-400 font-normal">Dunhuang</span></div>
             <div class="text-xs text-gray-400 leading-relaxed line-clamp-2">在沙漠腹地测试无人设备的耐高温性能，记录了极限环境下的设备运行数据与沿途绝美风光。</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. 中央 (路径追踪图) -->
+    <!-- 3. 中央：路径追踪图 -->
     <div class="panel panel-ct p-0">
+      <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+      <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+      <span class="hud-label tr">SYS.NAV.03</span>
+      <span class="hud-label bl">ROUTE TRACKING</span>
+
       <div class="cluster-panel-anim" aria-hidden="true"></div>
       <div id="chinaMap" class="w-full h-full absolute inset-0 z-0"></div>
 
       <!-- Overlay Header -->
       <div class="absolute top-0 left-0 right-0 z-10 pointer-events-none p-4 flex justify-between items-start">
-        <div class="text-cyan-400 font-bold tracking-wider text-sm flex items-center gap-2 bg-black/60 px-3 py-2 rounded-lg border border-cyan-500/30 backdrop-blur-md shadow-[0_4px_15px_rgba(0,0,0,0.5)]">
-          <i class="fas fa-route"></i> 路径追踪图 (ROUTE TRACKING MAP)
+        <div class="text-cyan-400 font-bold tracking-wider text-sm flex items-center gap-2 bg-black/70 px-4 py-2 rounded-lg border border-cyan-500/30 backdrop-blur-md shadow-[0_4px_20px_rgba(0,240,255,0.15)] font-mono" style="text-shadow:0 0 8px rgba(0,240,255,0.4);">
+          <i class="fas fa-route"></i> 路径追踪图 <span class="opacity-60">ROUTE TRACKING MAP</span>
         </div>
-        
+
         <!-- Status Card -->
-        <div class="bg-black/70 border border-cyan-500/50 backdrop-blur-md p-3 rounded-lg flex flex-col gap-2 shadow-[0_0_20px_rgba(34,211,238,0.2)] pointer-events-auto min-w-[240px]">
-          <div class="text-xs text-cyan-300 font-bold border-b border-cyan-500/30 pb-2 mb-1 flex items-center justify-between">
-            <span>移动基地实时状态</span>
-            <span class="text-[10px] bg-cyan-900/50 text-white px-1.5 py-0.5 rounded border border-cyan-500/50">200天环中旅程</span>
+        <div class="bg-black/75 border border-cyan-500/40 backdrop-blur-md p-4 rounded-xl flex flex-col gap-2 shadow-[0_0_30px_rgba(0,240,255,0.12)] pointer-events-auto min-w-[240px]">
+          <div class="text-xs text-cyan-300 font-bold border-b border-cyan-500/30 pb-2 mb-1 flex items-center justify-between font-mono tracking-wider">
+            <span><i class="fas fa-satellite-dish mr-1"></i> 移动基地实时状态</span>
+            <span class="text-[10px] bg-cyan-900/40 text-white px-2 py-0.5 rounded border border-cyan-500/50">200天环中旅程</span>
           </div>
           <div class="text-sm text-gray-300 flex items-center gap-2 justify-between">
             <span class="flex items-center gap-2"><i class="fas fa-crosshairs text-cyan-400 w-4 text-center"></i> 当前位置</span>
-            <span id="currentLocText" class="text-white font-bold bg-cyan-900/30 px-2 py-0.5 rounded">出发点: 深圳</span>
+            <span id="currentLocText" class="text-white font-bold bg-cyan-900/30 px-2 py-0.5 rounded metric-value">出发点: 深圳</span>
           </div>
           <div class="text-sm text-gray-300 flex items-center gap-2 justify-between">
             <span class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-cyan-400 w-4 text-center"></i> 在此逗留</span>
-            <span class="text-cyan-300 font-mono font-bold text-base"><span id="cityDaysText">0</span> <span class="text-xs text-gray-400 font-sans">天 (Days)</span></span>
+            <span class="text-cyan-300 metric-value font-bold text-base"><span id="cityDaysText">0</span> <span class="text-xs text-gray-400 font-sans">天 (Days)</span></span>
           </div>
           <div class="text-sm text-gray-300 flex items-center gap-2 justify-between">
             <span class="flex items-center gap-2"><i class="fas fa-clock text-cyan-400 w-4 text-center"></i> 出发至今</span>
-            <span class="text-cyan-300 font-mono font-bold text-base"><span id="totalDaysText">0</span> <span class="text-xs text-gray-400 font-sans">天 (Days)</span></span>
+            <span class="text-cyan-300 metric-value font-bold text-base"><span id="totalDaysText">0</span> <span class="text-xs text-gray-400 font-sans">天 (Days)</span></span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 4. 中央下 (社区互动与反馈) -->
+    <!-- 4. 中央下：社区互动与反馈 -->
     <div class="panel panel-cb p-4">
+      <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+      <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+      <span class="hud-label tr">SYS.SOC.04</span>
+      <span class="hud-label bl">COMMUNITY</span>
+
       <div class="panel-title">
-        <i class="fas fa-comments text-cyan-400"></i> 社区互动与反馈 (COMMUNITY INTERACTION & FEEDBACK)
+        <i class="fas fa-comments"></i> 社区互动与反馈 <span class="text-[10px] opacity-60 ml-1">COMMUNITY INTERACTION & FEEDBACK</span>
       </div>
-      
+
       <div class="flex h-full gap-4 min-h-0">
         <!-- 线下照片 -->
-        <div class="flex-1 glassy-frame p-3 flex flex-col relative overflow-hidden group">
-          <div class="absolute inset-0 bg-gradient-to-br from-cyan-900/10 to-transparent z-0"></div>
-          <div class="text-xs text-cyan-300/80 mb-2 z-10 flex justify-between items-center">
-            <span>线下照片 (OFFLINE PHOTOS)</span>
-            <i class="fas fa-camera text-gray-500"></i>
+        <div class="flex-1 glass-card p-3 flex flex-col relative overflow-hidden">
+          <div class="text-xs text-cyan-300/80 mb-2 z-10 flex justify-between items-center font-mono tracking-wider">
+            <span>线下照片 <span class="opacity-60">OFFLINE PHOTOS</span></span>
+            <i class="fas fa-camera text-cyan-500/70"></i>
           </div>
           <div id="photoCarousel" class="flex gap-2 flex-1 items-center z-10">
             <!-- 动态渲染 -->
           </div>
         </div>
-        
+
         <!-- 线上评论 -->
-        <div class="flex-1 glassy-frame p-3 flex flex-col relative overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-bl from-blue-900/10 to-transparent z-0"></div>
-          <div class="text-xs text-cyan-300/80 mb-2 z-10 flex justify-between items-center">
-            <span>线上网友评论精选 (SOCIAL MEDIA)</span>
-            <i class="fas fa-hashtag text-gray-500"></i>
+        <div class="flex-1 glass-card p-3 flex flex-col relative overflow-hidden">
+          <div class="text-xs text-cyan-300/80 mb-2 z-10 flex justify-between items-center font-mono tracking-wider">
+            <span>网友评论精选 <span class="opacity-60">SOCIAL MEDIA</span></span>
+            <i class="fas fa-hashtag text-purple-500/70"></i>
           </div>
           <div id="commentCarousel" class="flex flex-col gap-2 flex-1 justify-between z-10 overflow-hidden pr-1">
             <!-- 动态渲染 -->
@@ -444,251 +744,240 @@
       </div>
     </div>
 
-    <!-- 5 & 5.5 合并 (计算集群与设备温度) -->
+    <!-- 5 & 5.5 合并：计算集群与设备温度 -->
     <div class="panel panel-merged p-3">
-      <!-- <div class="cluster-panel-anim" aria-hidden="true"></div> -->
+      <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+      <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+      <span class="hud-label tr">SYS.CLUSTER.05</span>
+      <span class="hud-label bl">SYSTEM STATUS</span>
+
       <div class="inner">
-        <div class="panel-title relative z-10" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
-          <i class="fas fa-server text-cyan-400"></i> 综合运行状态 (SYSTEM STATUS)
+        <div class="panel-title" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+          <i class="fas fa-server"></i> 综合运行状态 <span class="text-[10px] opacity-60 ml-1">SYSTEM STATUS</span>
         </div>
-        
+
         <div class="flex flex-col gap-2 flex-1 justify-between min-h-0 relative z-10 overflow-y-auto pr-1">
-          
+
           <!-- J50 -->
-          <div class="glassy-frame relative group flex flex-col gap-2" style="padding: 12px; box-sizing: border-box;">
+          <div class="glass-card relative group flex flex-col gap-2" style="padding: 12px; box-sizing: border-box;">
             <div class="absolute inset-0 bg-cyan-900/5 opacity-0 group-hover:opacity-100 transition rounded-lg"></div>
-            
-            <!-- J50 Header -->
+
             <div class="flex items-center justify-between border-b border-cyan-500/20 pb-2 relative z-10">
               <div class="flex items-center gap-2">
-                <i class="fas fa-microchip text-cyan-400 text-lg"></i>
-                <span class="text-base font-bold text-white tracking-wide">J50 Node</span>
+                <i class="fas fa-microchip text-cyan-400 text-lg" style="filter:drop-shadow(0 0 5px rgba(0,240,255,0.5));"></i>
+                <span class="text-base font-bold text-white tracking-wide metric-value">J50 Node</span>
               </div>
               <div class="flex items-center gap-2 bg-green-900/30 px-2 py-1 rounded-md border border-green-500/30">
                 <i class="fas fa-broadcast-tower animate-pulse text-green-400 text-sm"></i>
-                <span class="text-xs font-mono text-green-400 font-bold">5G 35ms</span>
+                <span class="text-xs metric-value text-green-400 font-bold">5G 35ms</span>
               </div>
             </div>
 
-            <!-- J50 Metrics Grid -->
             <div class="grid grid-cols-2 gap-x-4 gap-y-3 relative z-10 mt-1">
-              
-              <!-- CPU & GPU Charts -->
               <div class="flex gap-2 col-span-2 sm:col-span-1">
-                <div class="flex-1 text-center relative bg-black/20 rounded p-1 border border-white/5">
+                <div class="flex-1 text-center relative bg-black/30 rounded p-1 border border-white/5">
                   <div id="j50CpuChart" class="w-full h-12"></div>
-                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center">CPU <span class="font-mono text-cyan-400 font-bold">32%</span></div>
+                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center font-mono">CPU <span class="metric-value text-cyan-400 font-bold">32%</span></div>
                 </div>
-                <div class="flex-1 text-center relative bg-black/20 rounded p-1 border border-white/5">
+                <div class="flex-1 text-center relative bg-black/30 rounded p-1 border border-white/5">
                   <div id="j50GpuChart" class="w-full h-12"></div>
-                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center">GPU <span class="font-mono text-cyan-400 font-bold">45%</span></div>
+                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center font-mono">GPU <span class="metric-value text-cyan-400 font-bold">45%</span></div>
                 </div>
               </div>
 
-              <!-- Memory & Storage Bars -->
               <div class="flex flex-col justify-center gap-2 col-span-2 sm:col-span-1">
                 <div class="flex flex-col">
-                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>内存 (Memory)</span><span class="font-mono text-yellow-400 font-bold">18.1G / 32G</span>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1 font-mono">
+                    <span>内存 <span class="opacity-60">Memory</span></span><span class="metric-value text-yellow-400 font-bold">18.1G / 32G</span>
                   </div>
-                  <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-yellow-400 h-full shadow-[0_0_8px_#facc15]" style="width: 56%"></div>
+                  <div class="progress-track h-1.5">
+                    <div class="progress-fill bg-yellow-400 text-yellow-400" style="width: 56%"></div>
                   </div>
                 </div>
                 <div class="flex flex-col">
-                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>存储 (Storage)</span><span class="font-mono text-cyan-400 font-bold">45%</span>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1 font-mono">
+                    <span>存储 <span class="opacity-60">Storage</span></span><span class="metric-value text-cyan-400 font-bold">45%</span>
                   </div>
-                  <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-cyan-400 h-full shadow-[0_0_8px_#22d3ee]" style="width: 45%"></div>
+                  <div class="progress-track h-1.5">
+                    <div class="progress-fill bg-cyan-400 text-cyan-400" style="width: 45%"></div>
                   </div>
                 </div>
               </div>
 
-              <!-- Temperature Alert Card (Moved from 5.5) -->
-              <div class="col-span-2 mt-1 temp-card bg-black/30 rounded border border-white/5 p-2 flex items-center justify-between" data-device="A">
+              <div class="col-span-2 mt-1 temp-card p-2 flex items-center justify-between" data-device="A">
                 <div class="flex items-center gap-2">
-                  <i class="fas fa-thermometer-half text-cyan-400 text-lg"></i>
+                  <i class="fas fa-thermometer-half text-cyan-400 text-lg" style="filter:drop-shadow(0 0 5px rgba(0,240,255,0.4));"></i>
                   <div>
-                    <div class="text-[10px] text-cyan-300/80">设备温度 (Device Temp)</div>
+                    <div class="text-[10px] text-cyan-300/80 font-mono">设备温度 <span class="opacity-60">Device Temp</span></div>
                     <div class="temp-status text-[9px] text-gray-400 mt-0.5">状态：正常</div>
                   </div>
                 </div>
                 <div class="flex items-center gap-3">
                   <canvas class="temp-canvas w-16 h-8 rounded opacity-80"></canvas>
-                  <div class="temp-value text-xl font-bold text-white font-mono tracking-wider w-16 text-right">--<span class="text-[10px] text-cyan-400">°C</span></div>
+                  <div class="temp-value text-xl font-bold text-white metric-value tracking-wider w-16 text-right">--<span class="text-[10px] text-cyan-400">°C</span></div>
                 </div>
               </div>
-
             </div>
           </div>
 
           <!-- R2X -->
-          <div class="glassy-frame relative group flex flex-col gap-2" style="padding: 12px; box-sizing: border-box;">
-            <div class="absolute inset-0 bg-blue-900/5 opacity-0 group-hover:opacity-100 transition rounded-lg"></div>
-            
-            <!-- R2X Header -->
-            <div class="flex items-center justify-between border-b border-blue-500/20 pb-2 relative z-10">
+          <div class="glass-card relative group flex flex-col gap-2" style="padding: 12px; box-sizing: border-box;">
+            <div class="absolute inset-0 bg-purple-900/5 opacity-0 group-hover:opacity-100 transition rounded-lg"></div>
+
+            <div class="flex items-center justify-between border-b border-purple-500/20 pb-2 relative z-10">
               <div class="flex items-center gap-2">
-                <i class="fas fa-microchip text-blue-400 text-lg"></i>
-                <span class="text-base font-bold text-white tracking-wide">R2X Node</span>
+                <i class="fas fa-microchip text-purple-400 text-lg" style="filter:drop-shadow(0 0 5px rgba(184,41,255,0.5));"></i>
+                <span class="text-base font-bold text-white tracking-wide metric-value">R2X Node</span>
               </div>
               <div class="flex items-center gap-2 bg-blue-900/30 px-2 py-1 rounded-md border border-blue-500/30">
                 <i class="fas fa-broadcast-tower animate-pulse text-blue-400 text-sm"></i>
-                <span class="text-xs font-mono text-blue-400 font-bold">5G 40ms</span>
+                <span class="text-xs metric-value text-blue-400 font-bold">5G 40ms</span>
               </div>
             </div>
 
-            <!-- R2X Metrics Grid -->
             <div class="grid grid-cols-2 gap-x-4 gap-y-3 relative z-10 mt-1">
-              
-              <!-- CPU & GPU Charts -->
               <div class="flex gap-2 col-span-2 sm:col-span-1">
-                <div class="flex-1 text-center relative bg-black/20 rounded p-1 border border-white/5">
+                <div class="flex-1 text-center relative bg-black/30 rounded p-1 border border-white/5">
                   <div id="r2xCpuChart" class="w-full h-12"></div>
-                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center">CPU <span class="font-mono text-blue-400 font-bold">28%</span></div>
+                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center font-mono">CPU <span class="metric-value text-blue-400 font-bold">28%</span></div>
                 </div>
-                <div class="flex-1 text-center relative bg-black/20 rounded p-1 border border-white/5">
+                <div class="flex-1 text-center relative bg-black/30 rounded p-1 border border-white/5">
                   <div id="r2xGpuChart" class="w-full h-12"></div>
-                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center">GPU <span class="font-mono text-blue-400 font-bold">40%</span></div>
+                  <div class="text-[10px] text-gray-300 absolute -bottom-1 w-full text-center font-mono">GPU <span class="metric-value text-blue-400 font-bold">40%</span></div>
                 </div>
               </div>
 
-              <!-- Memory & Storage Bars -->
               <div class="flex flex-col justify-center gap-2 col-span-2 sm:col-span-1">
                 <div class="flex flex-col">
-                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>内存 (Memory)</span><span class="font-mono text-blue-400 font-bold">16.5G / 32G</span>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1 font-mono">
+                    <span>内存 <span class="opacity-60">Memory</span></span><span class="metric-value text-blue-400 font-bold">16.5G / 32G</span>
                   </div>
-                  <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-blue-400 h-full shadow-[0_0_8px_#60a5fa]" style="width: 51%"></div>
+                  <div class="progress-track h-1.5">
+                    <div class="progress-fill bg-blue-400 text-blue-400" style="width: 51%"></div>
                   </div>
                 </div>
                 <div class="flex flex-col">
-                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>存储 (Storage)</span><span class="font-mono text-cyan-400 font-bold">32%</span>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1 font-mono">
+                    <span>存储 <span class="opacity-60">Storage</span></span><span class="metric-value text-cyan-400 font-bold">32%</span>
                   </div>
-                  <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-cyan-400 h-full shadow-[0_0_8px_#22d3ee]" style="width: 32%"></div>
+                  <div class="progress-track h-1.5">
+                    <div class="progress-fill bg-cyan-400 text-cyan-400" style="width: 32%"></div>
                   </div>
                 </div>
               </div>
 
-              <!-- Temperature Alert Card (Moved from 5.5) -->
-              <div class="col-span-2 mt-1 temp-card bg-black/30 rounded border border-white/5 p-2 flex items-center justify-between" data-device="B">
+              <div class="col-span-2 mt-1 temp-card p-2 flex items-center justify-between" data-device="B">
                 <div class="flex items-center gap-2">
-                  <i class="fas fa-thermometer-half text-blue-400 text-lg"></i>
+                  <i class="fas fa-thermometer-half text-purple-400 text-lg" style="filter:drop-shadow(0 0 5px rgba(184,41,255,0.4));"></i>
                   <div>
-                    <div class="text-[10px] text-cyan-300/80">设备温度 (Device Temp)</div>
+                    <div class="text-[10px] text-purple-300/80 font-mono">设备温度 <span class="opacity-60">Device Temp</span></div>
                     <div class="temp-status text-[9px] text-gray-400 mt-0.5">状态：正常</div>
                   </div>
                 </div>
                 <div class="flex items-center gap-3">
                   <canvas class="temp-canvas w-16 h-8 rounded opacity-80"></canvas>
-                  <div class="temp-value text-xl font-bold text-white font-mono tracking-wider w-16 text-right">--<span class="text-[10px] text-cyan-400">°C</span></div>
+                  <div class="temp-value text-xl font-bold text-white metric-value tracking-wider w-16 text-right">--<span class="text-[10px] text-purple-400">°C</span></div>
                 </div>
               </div>
-
             </div>
           </div>
-          
+
         </div>
       </div>
     </div>
 
-    <!-- 6. 右下 (车辆与生命维持系统) -->
+    <!-- 6. 右下：车辆与生命维持系统 -->
     <div class="panel panel-br right-panel">
+      <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+      <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+      <span class="hud-label tr">SYS.VEH.06</span>
+      <span class="hud-label bl">LIFE SUPPORT</span>
+
       <div class="inner">
         <div class="panel-title" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
-          <i class="fas fa-car-battery text-cyan-400"></i> 车辆与生命维持系统 (VEHICLE & LIFE SUPPORT)
-        </div>
-        
-        <div class="flex flex-col gap-2 flex-1 min-h-0">
-        <div class="grid grid-cols-2 gap-2">
-          <!-- 电池 -->
-          <div class="glassy-frame p-2 flex flex-col items-center justify-center relative overflow-hidden group">
-            <div class="absolute bottom-0 w-full h-1 bg-green-500 shadow-[0_0_15px_#4ade80] transition-all group-hover:h-1.5"></div>
-            <div class="flex items-center justify-between w-full mb-0.5">
-              <i class="fas fa-battery-three-quarters text-xl text-green-400"></i>
-              <span class="text-[9px] text-gray-400">Main Battery</span>
-            </div>
-            <div class="text-2xl font-bold text-white font-mono mt-0.5">88<span class="text-xs text-green-400">%</span></div>
-            <div class="text-[10px] text-green-200 mt-0.5">健康状态: 良好</div>
-          </div>
-          
-          <!-- 水箱 -->
-          <div class="glassy-frame p-2 flex flex-col items-center justify-center relative overflow-hidden group">
-            <div class="absolute bottom-0 w-full h-1 bg-blue-500 shadow-[0_0_15px_#3b82f6] transition-all group-hover:h-1.5"></div>
-            <div class="flex items-center justify-between w-full mb-0.5">
-              <i class="fas fa-tint text-xl text-blue-400"></i>
-              <span class="text-[9px] text-gray-400">Water Tank</span>
-            </div>
-            <div class="text-2xl font-bold text-white font-mono mt-0.5">75<span class="text-xs text-blue-400">%</span></div>
-            <div class="text-[10px] text-blue-200 mt-0.5 font-mono">150/200 L</div>
-          </div>
-        </div>
-        
-        <!-- 太阳能 -->
-        <div class="glassy-frame p-2 flex justify-between items-center bg-yellow-900/10 border-yellow-500/20 hover:border-yellow-500/50 transition">
-          <div class="flex items-center gap-2">
-            <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]">
-              <i class="fas fa-solar-panel text-yellow-400 text-lg"></i>
-            </div>
-            <div>
-              <div class="text-[10px] text-yellow-200/80 mb-0.5">太阳能充电 (Solar Charge)</div>
-              <div class="text-xl font-bold text-white font-mono flex items-end gap-1">
-                1.2 <span class="text-xs text-yellow-400 mb-0.5">kW</span>
-              </div>
-            </div>
-          </div>
-          <div id="solarChart" class="w-20 h-10"></div>
+          <i class="fas fa-car-battery"></i> 车辆与生命维持 <span class="text-[10px] opacity-60 ml-1">VEHICLE & LIFE SUPPORT</span>
         </div>
 
-        <!-- 胎压监测 -->
-        <div class="flex-1 glassy-frame p-2 flex flex-col relative min-h-0">
-          <div class="text-[10px] text-cyan-300/80 text-center mb-1 flex justify-center items-center gap-1">
-            <i class="fas fa-car"></i> 胎压监测 (Tire Pressure)
+        <div class="flex flex-col gap-2 flex-1 min-h-0">
+          <div class="grid grid-cols-2 gap-2">
+            <!-- 电池 -->
+            <div class="glass-card p-2 flex flex-col items-center justify-center relative overflow-hidden group">
+              <div class="absolute bottom-0 w-full h-1 bg-green-500 shadow-[0_0_15px_#4ade80] transition-all group-hover:h-1.5"></div>
+              <div class="flex items-center justify-between w-full mb-0.5">
+                <i class="fas fa-battery-three-quarters text-xl text-green-400" style="filter:drop-shadow(0 0 5px rgba(74,222,128,0.5));"></i>
+                <span class="text-[9px] text-gray-400 font-mono">Main Battery</span>
+              </div>
+              <div class="text-2xl font-bold text-white metric-value mt-0.5">88<span class="text-xs text-green-400">%</span></div>
+              <div class="text-[10px] text-green-200 mt-0.5">健康状态: 良好</div>
+            </div>
+
+            <!-- 水箱 -->
+            <div class="glass-card p-2 flex flex-col items-center justify-center relative overflow-hidden group">
+              <div class="absolute bottom-0 w-full h-1 bg-blue-500 shadow-[0_0_15px_#3b82f6] transition-all group-hover:h-1.5"></div>
+              <div class="flex items-center justify-between w-full mb-0.5">
+                <i class="fas fa-tint text-xl text-blue-400" style="filter:drop-shadow(0 0 5px rgba(59,130,246,0.5));"></i>
+                <span class="text-[9px] text-gray-400 font-mono">Water Tank</span>
+              </div>
+              <div class="text-2xl font-bold text-white metric-value mt-0.5">75<span class="text-xs text-blue-400">%</span></div>
+              <div class="text-[10px] text-blue-200 mt-0.5 metric-value">150/200 L</div>
+            </div>
           </div>
-          <div class="flex-1 flex justify-center items-center relative">
-            <!-- 车辆轮廓 -->
-            <div class="w-12 h-20 border border-cyan-700/50 rounded-lg relative flex items-center justify-center bg-cyan-900/10 shadow-[inset_0_0_15px_rgba(34,211,238,0.1)]">
-              <div class="w-8 h-14 border border-cyan-500/30 rounded-md"></div>
-              <!-- 轮胎框 -->
-              <!-- 左前 -->
-              <div class="absolute -left-2 top-2 w-2 h-5 bg-green-500/90 rounded-sm shadow-[0_0_8px_#4ade80] flex items-center justify-center">
-                <div class="w-0.5 h-2 bg-black/30"></div>
+
+          <!-- 太阳能 -->
+          <div class="glass-card p-2 flex justify-between items-center bg-yellow-900/10 border-yellow-500/20">
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/50 shadow-[0_0_12px_rgba(250,204,21,0.25)]">
+                <i class="fas fa-solar-panel text-yellow-400 text-lg"></i>
               </div>
-              <!-- 右前 -->
-              <div class="absolute -right-2 top-2 w-2 h-5 bg-green-500/90 rounded-sm shadow-[0_0_8px_#4ade80] flex items-center justify-center">
-                <div class="w-0.5 h-2 bg-black/30"></div>
-              </div>
-              <!-- 左后 -->
-              <div class="absolute -left-2 bottom-2 w-2 h-5 bg-green-500/90 rounded-sm shadow-[0_0_8px_#4ade80] flex items-center justify-center">
-                <div class="w-0.5 h-2 bg-black/30"></div>
-              </div>
-              <!-- 右后 -->
-              <div class="absolute -right-2 bottom-2 w-2 h-5 bg-yellow-500/90 rounded-sm shadow-[0_0_8px_#facc15] flex items-center justify-center animate-pulse">
-                <div class="w-0.5 h-2 bg-black/30"></div>
+              <div>
+                <div class="text-[10px] text-yellow-200/80 mb-0.5 font-mono">太阳能充电 <span class="opacity-60">Solar Charge</span></div>
+                <div class="text-xl font-bold text-white metric-value flex items-end gap-1">
+                  1.2 <span class="text-xs text-yellow-400 mb-0.5">kW</span>
+                </div>
               </div>
             </div>
-            
-            <!-- 数值标签 -->
-            <div class="absolute left-1 top-2 text-xs font-mono text-green-400 bg-black/50 px-1 rounded">2.4<span class="text-[9px]">bar</span></div>
-            <div class="absolute right-1 top-2 text-xs font-mono text-green-400 bg-black/50 px-1 rounded">2.5<span class="text-[9px]">bar</span></div>
-            <div class="absolute left-1 bottom-2 text-xs font-mono text-green-400 bg-black/50 px-1 rounded">2.4<span class="text-[9px]">bar</span></div>
-            <div class="absolute right-1 bottom-2 text-xs font-mono text-yellow-400 bg-black/50 px-1 rounded border border-yellow-500/50">2.6<span class="text-[9px]">bar</span></div>
+            <div id="solarChart" class="w-20 h-10"></div>
+          </div>
+
+          <!-- 胎压监测 -->
+          <div class="flex-1 glass-card p-2 flex flex-col relative min-h-0">
+            <div class="text-[10px] text-cyan-300/80 text-center mb-1 flex justify-center items-center gap-1 font-mono tracking-wider">
+              <i class="fas fa-car"></i> 胎压监测 <span class="opacity-60">Tire Pressure</span>
+            </div>
+            <div class="flex-1 flex justify-center items-center relative">
+              <!-- 车辆轮廓 -->
+              <div class="w-12 h-20 border border-cyan-700/50 rounded-lg relative flex items-center justify-center bg-cyan-900/10 shadow-[inset_0_0_20px_rgba(0,240,255,0.12)]">
+                <div class="w-8 h-14 border border-cyan-500/30 rounded-md"></div>
+                <div class="absolute -left-2 top-2 w-2 h-5 bg-green-500/90 rounded-sm shadow-[0_0_10px_#4ade80] flex items-center justify-center">
+                  <div class="w-0.5 h-2 bg-black/30"></div>
+                </div>
+                <div class="absolute -right-2 top-2 w-2 h-5 bg-green-500/90 rounded-sm shadow-[0_0_10px_#4ade80] flex items-center justify-center">
+                  <div class="w-0.5 h-2 bg-black/30"></div>
+                </div>
+                <div class="absolute -left-2 bottom-2 w-2 h-5 bg-green-500/90 rounded-sm shadow-[0_0_10px_#4ade80] flex items-center justify-center">
+                  <div class="w-0.5 h-2 bg-black/30"></div>
+                </div>
+                <div class="absolute -right-2 bottom-2 w-2 h-5 bg-yellow-500/90 rounded-sm shadow-[0_0_10px_#facc15] flex items-center justify-center animate-pulse">
+                  <div class="w-0.5 h-2 bg-black/30"></div>
+                </div>
+              </div>
+
+              <div class="absolute left-1 top-2 text-xs metric-value text-green-400 bg-black/50 px-1 rounded">2.4<span class="text-[9px]">bar</span></div>
+              <div class="absolute right-1 top-2 text-xs metric-value text-green-400 bg-black/50 px-1 rounded">2.5<span class="text-[9px]">bar</span></div>
+              <div class="absolute left-1 bottom-2 text-xs metric-value text-green-400 bg-black/50 px-1 rounded">2.4<span class="text-[9px]">bar</span></div>
+              <div class="absolute right-1 bottom-2 text-xs metric-value text-yellow-400 bg-black/50 px-1 rounded border border-yellow-500/50">2.6<span class="text-[9px]">bar</span></div>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
 
   </div>
 
   <!-- 页脚 -->
-  <div class="h-10 flex justify-between items-center text-cyan-500/80 text-xs px-8 font-mono border-t border-cyan-900/50 bg-black/60 backdrop-blur absolute bottom-0 w-full z-50">
-    <div class="flex items-center gap-2"><i class="fas fa-satellite text-cyan-400"></i> 柴火数字基地车移动数据中心 (Chaihuo Mobile Data Center)</div>
-    <div id="realTimeClock" class="font-bold text-cyan-400 tracking-wider"></div>
+  <div class="footer-bar">
+    <div class="flex items-center gap-2"><i class="fas fa-satellite"></i> 柴火数字基地车移动数据中心 <span class="opacity-60">Chaihuo Mobile Data Center</span></div>
+    <div id="realTimeClock" class="font-bold text-cyan-400 tracking-wider" style="text-shadow:0 0 8px rgba(0,240,255,0.4);"></div>
   </div>
 
   <!-- Map Configuration & Animation Scripts -->
@@ -697,21 +986,22 @@
 
   <!-- JavaScript Logic -->
   <script>
-    // 1. 实时时钟
+
+    // 1. Real-time clock
     function updateClock() {
       const now = new Date();
-      const timeStr = now.getFullYear() + '-' + 
-        String(now.getMonth()+1).padStart(2, '0') + '-' + 
-        String(now.getDate()).padStart(2, '0') + ' ' + 
-        String(now.getHours()).padStart(2, '0') + ':' + 
-        String(now.getMinutes()).padStart(2, '0') + ':' + 
+      const timeStr = now.getFullYear() + '-' +
+        String(now.getMonth()+1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
         String(now.getSeconds()).padStart(2, '0');
-      document.getElementById('realTimeClock').innerHTML = '当前时间：<span class="text-white">' + timeStr + '</span>';
+      document.getElementById('realTimeClock').innerHTML = 'T+<span class="text-white">' + timeStr + '</span>';
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 2. 左上：24小时温度折线图
+    // 2. Temperature line chart
     const tempChart = echarts.init(document.getElementById('tempChart'));
     tempChart.setOption({
       grid: { top: 5, bottom: 5, left: 0, right: 0 },
@@ -722,17 +1012,17 @@
         type: 'line',
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: '#06b6d4', width: 3 }, // cyan-500
+        lineStyle: { color: '#00f0ff', width: 3, shadowColor: '#00f0ff', shadowBlur: 10 },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(6, 182, 212, 0.4)' },
-            { offset: 1, color: 'rgba(6, 182, 212, 0)' }
+            { offset: 0, color: 'rgba(0, 240, 255, 0.45)' },
+            { offset: 1, color: 'rgba(0, 240, 255, 0)' }
           ])
         }
       }]
     });
 
-    // 3. 左上：湿度仪表盘
+    // 3. Humidity gauge
     const humChart = echarts.init(document.getElementById('humChart'));
     humChart.setOption({
       series: [{
@@ -747,8 +1037,8 @@
           lineStyle: {
             width: 8,
             color: [
-              [0.45, '#06b6d4'], // current value 45%
-              [1, 'rgba(255,255,255,0.1)']
+              [0.45, '#00f0ff'],
+              [1, 'rgba(255,255,255,0.08)']
             ]
           }
         },
@@ -760,7 +1050,7 @@
       }]
     });
 
-    // 4. 中央：路径追踪图 (中国地图)
+    // 4. China map route tracking
     const currentLocText = document.getElementById('currentLocText');
 
     async function ensureChinaMapLoaded() {
@@ -806,7 +1096,7 @@
       currentLocText.textContent = '地图加载失败';
     });
 
-    // 5. 右上：算力仪表盘通用函数
+    // 5. Compute gauge charts
     function initGauge(id, value, color) {
       const el = document.getElementById(id);
       if (!el) return null;
@@ -821,7 +1111,7 @@
           axisLine: {
             lineStyle: {
               width: 5,
-              color: [[value / 100, color], [1, 'rgba(255,255,255,0.1)']]
+              color: [[value / 100, color], [1, 'rgba(255,255,255,0.08)']]
             }
           },
           pointer: { show: false },
@@ -833,12 +1123,12 @@
       });
       return chart;
     }
-    const j50Cpu = initGauge('j50CpuChart', 32, '#22d3ee');
-    const j50Gpu = initGauge('j50GpuChart', 45, '#22d3ee');
-    const r2xCpu = initGauge('r2xCpuChart', 28, '#60a5fa');
-    const r2xGpu = initGauge('r2xGpuChart', 40, '#60a5fa');
+    const j50Cpu = initGauge('j50CpuChart', 32, '#00f0ff');
+    const j50Gpu = initGauge('j50GpuChart', 45, '#00f0ff');
+    const r2xCpu = initGauge('r2xCpuChart', 28, '#a855f7');
+    const r2xGpu = initGauge('r2xGpuChart', 40, '#a855f7');
 
-    // 6. 右下：太阳能充电条形图
+    // 6. Solar chart
     const solarChart = echarts.init(document.getElementById('solarChart'));
     solarChart.setOption({
       grid: { top: 5, bottom: 5, left: 0, right: 0 },
@@ -847,12 +1137,18 @@
       series: [{
         data: [0.3, 0.5, 0.8, 1.2, 1.1, 0.9],
         type: 'bar',
-        itemStyle: { color: '#facc15', borderRadius: [2,2,0,0] },
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#facc15' },
+            { offset: 1, color: 'rgba(250,204,21,0.2)' }
+          ]),
+          borderRadius: [2,2,0,0]
+        },
         barWidth: '60%'
       }]
     });
 
-    // ── 城市天气面板更新 ──────────────────────────────────────────
+    // ── City weather panel update ──
     const DEPARTURE = new Date('2026-04-22T00:00:00.000Z');
 
     function daysBetween(from, to) {
@@ -860,15 +1156,14 @@
     }
 
     const AQI_COLOR = {
-      '优': { text: 'text-green-400', border: 'border-green-400', shadow: 'shadow-[0_0_5px_#4ade80]' },
-      '良': { text: 'text-green-300', border: 'border-green-300', shadow: 'shadow-[0_0_5px_#86efac]' },
-      '轻度': { text: 'text-yellow-400', border: 'border-yellow-400', shadow: 'shadow-[0_0_5px_#facc15]' },
-      '中度': { text: 'text-orange-400', border: 'border-orange-400', shadow: 'shadow-[0_0_5px_#fb923c]' },
-      '重度': { text: 'text-red-400', border: 'border-red-400', shadow: 'shadow-[0_0_5px_#f87171]' }
+      '优': { text: 'text-green-400', border: 'border-green-400', shadow: 'shadow-[0_0_8px_#4ade80]' },
+      '良': { text: 'text-green-300', border: 'border-green-300', shadow: 'shadow-[0_0_8px_#86efac]' },
+      '轻度': { text: 'text-yellow-400', border: 'border-yellow-400', shadow: 'shadow-[0_0_8px_#facc15]' },
+      '中度': { text: 'text-orange-400', border: 'border-orange-400', shadow: 'shadow-[0_0_8px_#fb923c]' },
+      '重度': { text: 'text-red-400', border: 'border-red-400', shadow: 'shadow-[0_0_8px_#f87171]' }
     };
 
     function updateSensorPanel(data) {
-      // Weather icon
       const iconEl = document.getElementById('weatherIcon');
       const iconFallback = document.getElementById('weatherIconFallback');
       if (data.weatherIcon) {
@@ -877,36 +1172,29 @@
         iconFallback.style.display = 'none';
       }
 
-      // City name
       document.getElementById('sensorCityName').textContent = data.city;
 
-      // PM2.5 & AQI
       document.getElementById('sensorPm25').textContent = Math.round(data.pm25);
       const aqiEl = document.getElementById('sensorAqi');
       aqiEl.textContent = data.aqi;
       const colors = AQI_COLOR[data.aqi] || AQI_COLOR['良'];
-      aqiEl.className = `text-xs border px-1 py-0.5 rounded ${colors.text} ${colors.border} ${colors.shadow}`;
+      aqiEl.className = `text-xs border px-2 py-0.5 rounded font-mono ${colors.text} ${colors.border} ${colors.shadow}`;
 
-      // Temperature
       document.getElementById('sensorTemp').textContent = data.temperature.toFixed(1);
 
-      // Humidity value + gauge update
       document.getElementById('sensorHumidity').textContent = data.humidity;
       const humPct = Math.min(1, data.humidity / 100);
       humChart.setOption({
         series: [{
           axisLine: {
             lineStyle: {
-              color: [[humPct, '#06b6d4'], [1, 'rgba(255,255,255,0.1)']]
+              color: [[humPct, '#00f0ff'], [1, 'rgba(255,255,255,0.08)']]
             }
           }
         }]
       });
 
-      // Pressure
       document.getElementById('sensorPressure').textContent = data.pressure;
-
-      // Wind speed
       document.getElementById('sensorWind').textContent = data.windSpeed.toFixed(1);
     }
 
@@ -938,10 +1226,8 @@
       }
     }
 
-    // Initial load + polling every 1 minute
     fetchAndApply();
     setInterval(fetchAndApply, 60 * 1000);
-    // ── END 城市天气 ──────────────────────────────────────────────
 
     // Resize handler
     window.addEventListener('resize', function() {
@@ -959,17 +1245,6 @@
 
     function clamp(n, min, max) {
       return Math.max(min, Math.min(max, n));
-    }
-
-    function setGaugeProgress(cardEl, value) {
-      const progress = cardEl.querySelector('.temp-gauge-progress');
-      if (!progress) return;
-      const len = progress.getTotalLength();
-      progress.style.strokeDasharray = String(len);
-      const pct = clamp(value / 100, 0, 1);
-      progress.style.strokeDashoffset = String(len * (1 - pct));
-      const isAlert = value > 80;
-      progress.style.stroke = isAlert ? '#f87171' : '#22d3ee';
     }
 
     function ensureCanvasSize(canvas) {
@@ -1072,11 +1347,10 @@
       if (statusEl) statusEl.textContent = isAlert ? '状态：温度超限（>80°C）' : '状态：正常';
 
       cardEl.classList.toggle('alert', isAlert);
-      setGaugeProgress(cardEl, value);
 
       const canvas = cardEl.querySelector('.temp-canvas');
       if (canvas) {
-        const strokeColor = isAlert ? 'rgba(248,113,113,1)' : 'rgba(34,211,238,1)';
+        const strokeColor = isAlert ? 'rgba(248,113,113,1)' : 'rgba(0,240,255,1)';
         drawSparkline(canvas, state.values, strokeColor);
       }
     }
@@ -1086,7 +1360,6 @@
       cards.forEach((card) => {
         const deviceId = card.dataset.device;
         if (!deviceId) return;
-        setGaugeProgress(card, 0);
         updateTempCard(card, deviceId);
       });
 
@@ -1098,7 +1371,7 @@
           const canvas = card.querySelector('.temp-canvas');
           if (!canvas || !state) return;
           const isAlert = card.classList.contains('alert');
-          const strokeColor = isAlert ? 'rgba(248,113,113,1)' : 'rgba(34,211,238,1)';
+          const strokeColor = isAlert ? 'rgba(248,113,113,1)' : 'rgba(0,240,255,1)';
           drawSparkline(canvas, state.values, strokeColor);
         });
       });
@@ -1233,11 +1506,11 @@
           const style = avatarStyles[idx % avatarStyles.length];
           const seed = encodeURIComponent(c.name);
           const div = document.createElement('div');
-          div.className = 'flex items-start gap-2 bg-black/40 p-2 rounded border border-white/5 hover:border-cyan-500/30 transition';
+          div.className = 'flex items-start gap-2 bg-black/30 p-2 rounded-lg border border-white/5 hover:border-cyan-500/30 transition backdrop-blur-sm';
           div.innerHTML = `
-            <img src="https://api.dicebear.com/7.x/${style}/svg?seed=${seed}" class="w-7 h-7 rounded-full border border-cyan-500 shadow-[0_0_5px_#22d3ee] flex-shrink-0 bg-gray-800">
+            <img src="https://api.dicebear.com/7.x/${style}/svg?seed=${seed}" class="w-7 h-7 rounded-full border border-cyan-500/50 shadow-[0_0_8px_rgba(0,240,255,0.35)] flex-shrink-0 bg-gray-800">
             <div class="flex-1 min-w-0">
-              <div class="text-[10px] text-cyan-400 font-bold">@${c.name}</div>
+              <div class="text-[10px] text-cyan-400 font-bold font-mono tracking-wide">@${c.name}</div>
               <div class="text-xs text-gray-300 truncate">${c.text}</div>
             </div>`;
           container.appendChild(div);
@@ -1262,8 +1535,11 @@
         for (let i = 0; i < VISIBLE; i++) {
           const src = photos[(offset + i) % photos.length];
           const div = document.createElement('div');
-          div.className = 'flex-1 h-full rounded border border-white/10 overflow-hidden cursor-pointer hover:border-cyan-400 transition shadow-lg';
-          div.innerHTML = `<img src="${src}" class="w-full h-full object-cover opacity-60 hover:opacity-100 hover:scale-110 transition duration-500">`;
+          div.className = 'flex-1 h-full holo-frame cursor-pointer';
+          div.innerHTML = `
+            <div class="holo-scan"></div>
+            <img src="${src}" class="w-full h-full object-cover" alt="photo">
+          `;
           container.appendChild(div);
         }
         offset = (offset + 1) % photos.length;
